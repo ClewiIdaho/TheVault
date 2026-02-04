@@ -1,0 +1,2988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RapperStore VAULT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-base: #000000;
+            --bg-elevated: rgba(28, 28, 30, 0.72);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --bg-glass-heavy: rgba(255, 255, 255, 0.08);
+            --bg-glass-light: rgba(255, 255, 255, 0.03);
+            
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --border-glass-heavy: rgba(255, 255, 255, 0.18);
+            
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.55);
+            --text-tertiary: rgba(255, 255, 255, 0.35);
+            
+            --accent-purple: #bf5af2;
+            --accent-blue: #64d2ff;
+            --accent-green: #30d158;
+            --accent-orange: #ff9f0a;
+            --accent-red: #ff453a;
+            --accent-pink: #ff375f;
+            
+            --blur-amount: 40px;
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            
+            --shadow-glow: 0 0 80px rgba(191, 90, 242, 0.15);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-elevated: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-pink) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+            opacity: 0.3;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        /* Noise Texture Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            opacity: 0.015;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Main Container */
+        .app-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            margin-bottom: 40px;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .nav-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 4px 20px rgba(191, 90, 242, 0.4);
+        }
+
+        .nav-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-title span {
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass);
+        }
+
+        .nav-tab.active {
+            color: var(--text-primary);
+            background: var(--bg-glass-heavy);
+            border: 1px solid var(--border-glass);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 80px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-glass-heavy);
+            box-shadow: var(--shadow-card);
+        }
+
+        .glass-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .glass-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .glass-card-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-glass-heavy);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: white;
+            box-shadow: 0 4px 24px rgba(191, 90, 242, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(191, 90, 242, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-glass {
+            background: var(--bg-glass-heavy);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+        }
+
+        .btn-glass:hover {
+            background: var(--bg-glass);
+            border-color: var(--border-glass-heavy);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 10px 16px;
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass);
+        }
+
+        .btn-danger {
+            background: rgba(255, 69, 58, 0.15);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            color: var(--accent-red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 69, 58, 0.25);
+        }
+
+        .btn-sm {
+            padding: 10px 18px;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Action Row */
+        .action-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Photo Upload Styles */
+        .photo-upload-area {
+            border: 2px dashed var(--border-glass-heavy);
+            border-radius: var(--radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-glass-light);
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--accent-purple);
+            background: var(--bg-glass);
+        }
+
+        .photo-upload-area.has-image {
+            padding: 20px;
+            border-style: solid;
+            border-color: var(--accent-green);
+        }
+
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+
+        .photo-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .photo-upload-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .photo-upload-hint {
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 16px;
+            }
+
+            .nav-bar {
+                flex-direction: column;
+                gap: 16px;
+                padding: 16px;
+                position: relative;
+                top: 0;
+            }
+
+            .nav-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero {
+                padding: 40px 10px 60px;
+            }
+
+            .stats-row {
+                gap: 30px;
+            }
+
+            .glass-card {
+                padding: 24px;
+                border-radius: var(--radius-lg);
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+    <div class="noise-overlay"></div>    <!-- Continue CSS -->
+    <style>
+        /* ================================
+           TRACK LIST STYLES
+           ================================ */
+        
+        .track-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+            background: var(--bg-glass-light);
+            border: 1px solid transparent;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .track-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-blue));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .track-item:hover {
+            background: var(--bg-glass);
+            border-color: var(--border-glass);
+            transform: translateX(4px);
+        }
+
+        .track-item:hover::before {
+            opacity: 1;
+        }
+
+        .track-artwork {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--bg-glass-heavy), var(--bg-glass));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            border: 1px solid var(--border-glass);
+        }
+
+        .track-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .track-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        .track-meta-item svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0.6;
+        }
+
+        .track-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .status-complete {
+            background: rgba(48, 209, 88, 0.12);
+            color: var(--accent-green);
+            border: 1px solid rgba(48, 209, 88, 0.25);
+        }
+
+        .status-incomplete {
+            background: rgba(255, 159, 10, 0.12);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 159, 10, 0.25);
+        }
+
+        .track-arrow {
+            color: var(--text-tertiary);
+            transition: all 0.3s ease;
+        }
+
+        .track-item:hover .track-arrow {
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        /* ================================
+           EMPTY STATE
+           ================================ */
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 30px;
+        }
+
+        .empty-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            color: var(--text-secondary);
+            max-width: 350px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+
+        /* ================================
+           FORM STYLES
+           ================================ */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-grid-full {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-grid-full {
+                grid-column: span 1;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-label .required {
+            color: var(--accent-pink);
+            margin-left: 2px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.25s ease;
+        }
+
+        .form-input:hover {
+            border-color: var(--border-glass-heavy);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            background: var(--bg-glass);
+            box-shadow: 0 0 0 4px rgba(191, 90, 242, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 48px;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .form-divider {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 35px 0;
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .form-divider::before,
+        .form-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-glass);
+        }
+
+        /* ================================
+           COLLABORATOR SECTION
+           ================================ */
+
+        .collab-section {
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .collab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .collab-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collab-count {
+            background: var(--bg-glass-heavy);
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .collab-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .collab-item {
+            display: grid;
+            grid-template-columns: 1fr 140px 90px 44px;
+            gap: 12px;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            transition: all 0.25s ease;
+        }
+
+        .collab-item:hover {
+            border-color: var(--border-glass-heavy);
+        }
+
+        @media (max-width: 600px) {
+            .collab-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .collab-input {
+            padding: 12px 16px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+
+        .collab-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        .collab-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .split-input {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .remove-btn {
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: 1px solid rgba(255, 69, 58, 0.2);
+            border-radius: var(--radius-sm);
+            color: var(--accent-red);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 69, 58, 0.15);
+            border-color: rgba(255, 69, 58, 0.4);
+        }
+
+        .split-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-md);
+        }
+
+        .split-summary.valid {
+            border: 1px solid rgba(48, 209, 88, 0.3);
+            background: rgba(48, 209, 88, 0.05);
+        }
+
+        .split-summary.invalid {
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            background: rgba(255, 159, 10, 0.05);
+        }
+
+        .split-total-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .split-total-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .split-summary.valid .split-total-value {
+            color: var(--accent-green);
+        }
+
+        .split-summary.invalid .split-total-value {
+            color: var(--accent-orange);
+        }
+
+        /* ================================
+           MODAL STYLES
+           ================================ */
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            background: var(--bg-elevated);
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            transform: translateY(20px) scale(0.97);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-backdrop.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 30px;
+            border-bottom: 1px solid var(--border-glass);
+            background: var(--bg-glass-light);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.25s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px 30px;
+            border-top: 1px solid var(--border-glass);
+            background: var(--bg-glass-light);
+        }
+
+        @media (max-width: 600px) {
+            .modal {
+                max-height: 95vh;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 20px;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+
+        /* ================================
+           VIEW MODAL TABS
+           ================================ */
+
+        .view-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 6px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            margin-bottom: 28px;
+        }
+
+        .view-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .view-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .view-tab.active {
+            background: var(--bg-glass-heavy);
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+        }
+
+        .view-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ================================
+           DETAIL CARDS
+           ================================ */
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .detail-item {
+            padding: 16px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+        }
+
+        .detail-item-label {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+        }
+
+        .detail-item-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .detail-item-value.mono {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: var(--accent-blue);
+        }
+
+        /* Credit Row */
+        .credit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--bg-glass-light);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+        }
+
+        .credit-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .credit-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .credit-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .credit-name {
+            font-weight: 600;
+        }
+
+        .credit-role {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        .credit-split {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        /* ================================
+           TOAST NOTIFICATIONS
+           ================================ */
+
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-elevated);
+            animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            min-width: 280px;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .toast-success .toast-icon {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--accent-green);
+        }
+
+        .toast-error .toast-icon {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--accent-red);
+        }
+
+        .toast-message {
+            font-weight: 500;
+        }
+
+        @media (max-width: 600px) {
+            .toast-container {
+                left: 16px;
+                right: 16px;
+                bottom: 20px;
+            }
+
+            .toast {
+                min-width: auto;
+            }
+        }
+    </style>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <div class="nav-brand">
+                <div class="nav-logo">RS</div>
+                <div class="nav-title">VAULT <span>by RapperStore</span></div>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchPage('catalog', this)">Catalog</button>
+                <button class="nav-tab" onclick="switchPage('epk', this)">EPK Builder</button>
+                <button class="nav-tab" onclick="switchPage('tools', this)">Tools</button>
+            </div>
+        </nav>
+
+        <!-- ================================
+             CATALOG PAGE
+             ================================ -->
+        <section class="page-section active" id="page-catalog">
+            
+            <!-- Hero -->
+            <div class="hero">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    <span>All data stored locally on your device</span>
+                </div>
+                <h1 class="hero-title">Your Music's<br>Black Box</h1>
+                <p class="hero-subtitle">Organize your catalog, protect your royalties, and never lose a credit again.</p>
+                
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTracks">0</div>
+                        <div class="stat-label">Tracks</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statCollabs">0</div>
+                        <div class="stat-label">Collaborators</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statComplete">0%</div>
+                        <div class="stat-label">Complete</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Row -->
+            <div class="action-row">
+                <button class="btn btn-primary" onclick="openAddTrackModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    Add Track
+                </button>
+                <button class="btn btn-glass" onclick="exportCatalogJSON()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export
+                </button>
+                <button class="btn btn-glass" onclick="document.getElementById('importInput').click()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    Import
+                </button>
+                <input type="file" id="importInput" accept=".json" style="display:none" onchange="importCatalogJSON(event)">
+            </div>
+
+            <!-- Track List Card -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <div class="glass-card-title">
+                        <div class="glass-card-icon">📀</div>
+                        <span>Your Catalog</span>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+                        CSV
+                    </button>
+                </div>
+                
+                <div id="trackListContainer">
+                    <!-- Tracks render here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================
+             EPK BUILDER PAGE (WITH PHOTO UPLOAD)
+             ================================ -->
+        <section class="page-section" id="page-epk">
+            <div class="hero" style="padding-bottom: 50px;">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot" style="background: var(--accent-blue);"></span>
+                    <span>Electronic Press Kit</span>
+                </div>
+                <h1 class="hero-title">EPK Builder</h1>
+                <p class="hero-subtitle">Create a professional press kit to send to blogs, venues, and labels.</p>
+            </div>
+
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <div class="glass-card-title">
+                        <div class="glass-card-icon">🎤</div>
+                        <span>Artist Info</span>
+                    </div>
+                </div>
+
+                <form id="epkForm">
+                    <!-- PHOTO UPLOAD SECTION -->
+                    <div class="form-group" style="margin-bottom: 30px;">
+                        <label class="form-label">Artist Photo</label>
+                        <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('epkPhotoInput').click()">
+                            <div id="photoPreviewContainer">
+                                <div class="photo-upload-icon">📷</div>
+                                <div class="photo-upload-text">Click to upload a photo</div>
+                                <div class="photo-upload-hint">JPG, PNG • Max 2MB • Will appear on your EPK PDF</div>
+                            </div>
+                        </div>
+                        <input type="file" id="epkPhotoInput" accept="image/jpeg,image/png,image/jpg" style="display:none" onchange="handlePhotoUpload(event)">
+                        <button type="button" class="btn btn-ghost btn-sm" id="removePhotoBtn" style="margin-top: 10px; display: none;" onclick="removePhoto(event)">Remove Photo</button>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Artist / Band Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="epkArtistName" placeholder="Your artist name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Genre</label>
+                            <input type="text" class="form-input" id="epkGenre" placeholder="e.g., Hip-Hop, R&B, Trap">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-input" id="epkLocation" placeholder="e.g., Atlanta, GA">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Years Active</label>
+                            <input type="text" class="form-input" id="epkYearsActive" placeholder="e.g., 2019 - Present">
+                        </div>
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Bio <span class="required">*</span></label>
+                            <textarea class="form-input" id="epkBio" placeholder="Write a compelling bio about yourself or your group... (3rd person works best for press)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Contact & Links</div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" id="epkEmail" placeholder="booking@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-input" id="epkPhone" placeholder="+1 (555) 000-0000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Instagram</label>
+                            <input type="text" class="form-input" id="epkInstagram" placeholder="@username">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Spotify</label>
+                            <input type="url" class="form-input" id="epkSpotify" placeholder="https://open.spotify.com/artist/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Apple Music</label>
+                            <input type="url" class="form-input" id="epkApple" placeholder="https://music.apple.com/artist/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">YouTube</label>
+                            <input type="url" class="form-input" id="epkYouTube" placeholder="https://youtube.com/@...">
+                        </div>
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Website</label>
+                            <input type="url" class="form-input" id="epkWebsite" placeholder="https://yourwebsite.com">
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Highlights</div>
+
+                    <div class="form-grid">
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Notable Achievements / Press</label>
+                            <textarea class="form-input" id="epkAchievements" placeholder="• Featured on Complex&#10;• 1M+ streams on Spotify&#10;• Opened for [Artist Name]&#10;• Performed at [Festival]"></textarea>
+                            <span class="form-hint">List your biggest wins, one per line</span>
+                        </div>
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Top Tracks (from your catalog)</label>
+                            <div id="epkTrackSelect" style="margin-top: 8px;">
+                                <p style="color: var(--text-tertiary); font-size: 0.9rem;">Add tracks to your catalog first</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-primary" onclick="generateEPK()">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                            Generate PDF
+                        </button>
+                        <button type="button" class="btn btn-glass" onclick="saveEPKData()">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+                            Save Info
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================================
+             TOOLS PAGE (BPM TAP REMOVED)
+             ================================ -->
+        <section class="page-section" id="page-tools">
+            <div class="hero" style="padding-bottom: 50px;">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot" style="background: var(--accent-orange);"></span>
+                    <span>Quick Tools</span>
+                </div>
+                <h1 class="hero-title">Artist Tools</h1>
+                <p class="hero-subtitle">Handy calculators and utilities for your music business.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                
+                <!-- Split Calculator -->
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <div class="glass-card-title">
+                            <div class="glass-card-icon">💰</div>
+                            <span>Split Calculator</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+                        Calculate how earnings are divided between collaborators.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Total Earnings ($)</label>
+                        <input type="number" class="form-input" id="calcEarnings" placeholder="1000" value="1000">
+                    </div>
+                    <div id="calcSplitInputs" style="margin-top: 16px;">
+                        <!-- Dynamic inputs -->
+                    </div>
+                    <button class="btn btn-glass btn-sm" style="margin-top: 12px;" onclick="addCalcPerson()">+ Add Person</button>
+                    <div id="calcResults" style="margin-top: 24px; display: none;">
+                        <!-- Results here -->
+                    </div>
+                </div>
+
+                <!-- Quick ISRC Lookup (info) -->
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <div class="glass-card-title">
+                            <div class="glass-card-icon">🔍</div>
+                            <span>ISRC Info</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">
+                        Understanding ISRC codes for your releases.
+                    </p>
+                    <div style="background: var(--bg-glass-light); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 20px; font-size: 0.9rem; line-height: 1.7;">
+                        <strong style="color: var(--accent-blue);">ISRC</strong> = International Standard Recording Code<br><br>
+                        <span style="color: var(--text-secondary);">Format:</span> <code style="background: var(--bg-glass); padding: 2px 8px; border-radius: 4px;">CC-XXX-YY-NNNNN</code><br><br>
+                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">
+                            • CC = Country code<br>
+                            • XXX = Registrant code<br>
+                            • YY = Year<br>
+                            • NNNNN = Unique ID
+                        </span><br><br>
+                        <span style="color: var(--accent-green);">✓</span> Your distributor (DistroKid, TuneCore, etc.) assigns this automatically.
+                    </div>
+                </div>
+
+                <!-- PRO Info Card -->
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <div class="glass-card-title">
+                            <div class="glass-card-icon">📋</div>
+                            <span>PRO Guide</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">
+                        Performance Rights Organizations collect royalties for you.
+                    </p>
+                    <div style="background: var(--bg-glass-light); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 20px; font-size: 0.9rem; line-height: 1.7;">
+                        <strong style="color: var(--accent-purple);">US PROs:</strong><br>
+                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">
+                            • ASCAP - ascap.com<br>
+                            • BMI - bmi.com<br>
+                            • SESAC - sesac.com<br>
+                            • GMR - gmr.com
+                        </span><br><br>
+                        <strong style="color: var(--accent-purple);">International:</strong><br>
+                        <span style="color: var(--text-tertiary); font-size: 0.85rem;">
+                            • PRS (UK)<br>
+                            • SOCAN (Canada)<br>
+                            • GEMA (Germany)<br>
+                            • SACEM (France)
+                        </span><br><br>
+                        <span style="color: var(--accent-green);">✓</span> Register your songs after release to collect performance royalties.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ================================
+         ADD/EDIT TRACK MODAL
+         ================================ -->
+    <div class="modal-backdrop" id="trackModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="trackModalTitle">Add New Track</h2>
+                <button class="modal-close" onclick="closeTrackModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="trackForm">
+                    <input type="hidden" id="editTrackId">
+
+                    <div class="form-grid">
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Track Title <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="inputTitle" placeholder="e.g., Dreams & Nightmares" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Main Artist <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="inputArtist" placeholder="Your artist name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Featured Artists</label>
+                            <input type="text" class="form-input" id="inputFeatured" placeholder="e.g., Artist A, Artist B">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ISRC Code</label>
+                            <input type="text" class="form-input" id="inputISRC" placeholder="e.g., USRC12345678">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Release Date</label>
+                            <input type="date" class="form-input" id="inputReleaseDate">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">BPM</label>
+                            <input type="number" class="form-input" id="inputBPM" placeholder="e.g., 140">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Key</label>
+                            <input type="text" class="form-input" id="inputKey" placeholder="e.g., C Minor">
+                        </div>
+                        <div class="form-group form-grid-full">
+                            <label class="form-label">Genre</label>
+                            <input type="text" class="form-input" id="inputGenre" placeholder="e.g., Hip-Hop, Trap, R&B">
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Credits & Splits</div>
+
+                    <div class="collab-section">
+                        <div class="collab-header">
+                            <div class="collab-title">
+                                Writers & Producers
+                                <span class="collab-count" id="collabCount">0</span>
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="addCollaborator()">+ Add</button>
+                        </div>
+                        <div class="collab-list" id="collabList">
+                            <!-- Collaborators rendered here -->
+                        </div>
+                        <div class="split-summary" id="splitSummary">
+                            <span class="split-total-label">Total Split</span>
+                            <span class="split-total-value" id="splitTotalDisplay">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Publishing</div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Publisher</label>
+                            <input type="text" class="form-input" id="inputPublisher" placeholder="e.g., Sony/ATV, Self-Published">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PRO</label>
+                            <select class="form-input" id="inputPRO">
+                                <option value="">Select PRO...</option>
+                                <option value="ASCAP">ASCAP</option>
+                                <option value="BMI">BMI</option>
+                                <option value="SESAC">SESAC</option>
+                                <option value="GMR">GMR</option>
+                                <option value="PRS">PRS (UK)</option>
+                                <option value="SOCAN">SOCAN (Canada)</option>
+                                <option value="GEMA">GEMA (Germany)</option>
+                                <option value="SACEM">SACEM (France)</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Additional Info</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Samples Used</label>
+                        <textarea class="form-input" id="inputSamples" placeholder="List any samples: original song, artist, clearance status..."></textarea>
+                        <span class="form-hint">Document for potential sync licensing or clearance needs</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-input" id="inputNotes" placeholder="Studio info, session notes, anything else..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-glass" onclick="closeTrackModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTrack()">Save Track</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================
+         VIEW TRACK MODAL (QR CODE REMOVED)
+         ================================ -->
+    <div class="modal-backdrop" id="viewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="viewModalTitle">Track Details</h2>
+                <button class="modal-close" onclick="closeViewModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="view-tabs">
+                    <button class="view-tab active" onclick="switchViewTab('details', this)">Details</button>
+                    <button class="view-tab" onclick="switchViewTab('splitsheet', this)">Split Sheet</button>
+                </div>
+                <div id="viewContent" class="view-content">
+                    <!-- Tab content rendered here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="deleteTrack()">Delete</button>
+                <button class="btn btn-glass" onclick="editTrack()">Edit</button>
+                <button class="btn btn-primary" onclick="exportTrackPDF()">Export PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>    <script>
+        // =========================================
+        // RAPPERSTORE VAULT - CORE ENGINE
+        // =========================================
+
+        const { jsPDF } = window.jspdf;
+
+        // =========================================
+        // STATE MANAGEMENT
+        // =========================================
+        
+        let catalog = [];
+        let collaborators = [];
+        let currentTrackId = null;
+        let epkData = {};
+        let epkPhotoData = null; // Base64 image data for EPK
+
+        // Split Calculator State
+        let calcPeople = [{ name: '', split: 50 }, { name: '', split: 50 }];
+
+        // =========================================
+        // INITIALIZATION
+        // =========================================
+
+        function init() {
+            loadCatalog();
+            loadEPKData();
+            renderTrackList();
+            updateStats();
+            initSplitCalculator();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // =========================================
+        // LOCAL STORAGE
+        // =========================================
+
+        function loadCatalog() {
+            const saved = localStorage.getItem('rs_vault_catalog');
+            if (saved) {
+                catalog = JSON.parse(saved);
+            }
+        }
+
+        function saveCatalog() {
+            localStorage.setItem('rs_vault_catalog', JSON.stringify(catalog));
+            updateStats();
+        }
+
+        function loadEPKData() {
+            const saved = localStorage.getItem('rs_vault_epk');
+            if (saved) {
+                epkData = JSON.parse(saved);
+                populateEPKForm();
+            }
+            // Load photo separately (can be large)
+            const savedPhoto = localStorage.getItem('rs_vault_epk_photo');
+            if (savedPhoto) {
+                epkPhotoData = savedPhoto;
+                displayPhotoPreview(savedPhoto);
+            }
+        }
+
+        function saveEPKData() {
+            epkData = {
+                artistName: document.getElementById('epkArtistName').value,
+                genre: document.getElementById('epkGenre').value,
+                location: document.getElementById('epkLocation').value,
+                yearsActive: document.getElementById('epkYearsActive').value,
+                bio: document.getElementById('epkBio').value,
+                email: document.getElementById('epkEmail').value,
+                phone: document.getElementById('epkPhone').value,
+                instagram: document.getElementById('epkInstagram').value,
+                spotify: document.getElementById('epkSpotify').value,
+                apple: document.getElementById('epkApple').value,
+                youtube: document.getElementById('epkYouTube').value,
+                website: document.getElementById('epkWebsite').value,
+                achievements: document.getElementById('epkAchievements').value
+            };
+            localStorage.setItem('rs_vault_epk', JSON.stringify(epkData));
+            
+            // Save photo separately
+            if (epkPhotoData) {
+                try {
+                    localStorage.setItem('rs_vault_epk_photo', epkPhotoData);
+                } catch (e) {
+                    console.warn('Photo too large for localStorage');
+                }
+            }
+            
+            showToast('EPK info saved!', 'success');
+        }
+
+        function populateEPKForm() {
+            if (!epkData) return;
+            document.getElementById('epkArtistName').value = epkData.artistName || '';
+            document.getElementById('epkGenre').value = epkData.genre || '';
+            document.getElementById('epkLocation').value = epkData.location || '';
+            document.getElementById('epkYearsActive').value = epkData.yearsActive || '';
+            document.getElementById('epkBio').value = epkData.bio || '';
+            document.getElementById('epkEmail').value = epkData.email || '';
+            document.getElementById('epkPhone').value = epkData.phone || '';
+            document.getElementById('epkInstagram').value = epkData.instagram || '';
+            document.getElementById('epkSpotify').value = epkData.spotify || '';
+            document.getElementById('epkApple').value = epkData.apple || '';
+            document.getElementById('epkYouTube').value = epkData.youtube || '';
+            document.getElementById('epkWebsite').value = epkData.website || '';
+            document.getElementById('epkAchievements').value = epkData.achievements || '';
+        }
+
+        // =========================================
+        // PHOTO UPLOAD HANDLING
+        // =========================================
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.match(/image\/(jpeg|jpg|png)/)) {
+                showToast('Please upload a JPG or PNG image', 'error');
+                return;
+            }
+
+            // Validate file size (2MB max)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image must be under 2MB', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                epkPhotoData = e.target.result;
+                displayPhotoPreview(epkPhotoData);
+                showToast('Photo uploaded!', 'success');
+            };
+            reader.onerror = function() {
+                showToast('Error reading file', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayPhotoPreview(dataUrl) {
+            const container = document.getElementById('photoPreviewContainer');
+            const uploadArea = document.getElementById('photoUploadArea');
+            const removeBtn = document.getElementById('removePhotoBtn');
+
+            container.innerHTML = `
+                <img src="${dataUrl}" alt="Artist Photo" class="photo-preview">
+                <div class="photo-upload-text">Click to change photo</div>
+            `;
+            uploadArea.classList.add('has-image');
+            removeBtn.style.display = 'inline-flex';
+        }
+
+        function removePhoto(event) {
+            event.stopPropagation();
+            epkPhotoData = null;
+            localStorage.removeItem('rs_vault_epk_photo');
+            
+            const container = document.getElementById('photoPreviewContainer');
+            const uploadArea = document.getElementById('photoUploadArea');
+            const removeBtn = document.getElementById('removePhotoBtn');
+
+            container.innerHTML = `
+                <div class="photo-upload-icon">📷</div>
+                <div class="photo-upload-text">Click to upload a photo</div>
+                <div class="photo-upload-hint">JPG, PNG • Max 2MB • Will appear on your EPK PDF</div>
+            `;
+            uploadArea.classList.remove('has-image');
+            removeBtn.style.display = 'none';
+            
+            // Reset file input
+            document.getElementById('epkPhotoInput').value = '';
+            
+            showToast('Photo removed', 'success');
+        }
+
+        // =========================================
+        // STATS
+        // =========================================
+
+        function updateStats() {
+            document.getElementById('statTracks').textContent = catalog.length;
+
+            // Unique collaborators
+            const uniqueCollabs = new Set();
+            catalog.forEach(track => {
+                (track.collaborators || []).forEach(c => {
+                    if (c.name) uniqueCollabs.add(c.name.toLowerCase().trim());
+                });
+            });
+            document.getElementById('statCollabs').textContent = uniqueCollabs.size;
+
+            // Completeness
+            if (catalog.length === 0) {
+                document.getElementById('statComplete').textContent = '0%';
+                return;
+            }
+
+            let totalFields = 0;
+            let filledFields = 0;
+            const checkFields = ['title', 'artist', 'isrc', 'releaseDate', 'bpm', 'genre', 'pro'];
+            
+            catalog.forEach(track => {
+                checkFields.forEach(field => {
+                    totalFields++;
+                    if (track[field]) filledFields++;
+                });
+                totalFields++;
+                if (track.collaborators && track.collaborators.length > 0 && track.collaborators[0].name) {
+                    filledFields++;
+                }
+            });
+
+            const pct = Math.round((filledFields / totalFields) * 100);
+            document.getElementById('statComplete').textContent = pct + '%';
+
+            // Update EPK track selector
+            updateEPKTrackSelector();
+        }
+
+        // =========================================
+        // PAGE NAVIGATION
+        // =========================================
+
+        function switchPage(pageId, btn) {
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update pages
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+        }
+
+        // =========================================
+        // TRACK LIST RENDERING
+        // =========================================
+
+        function renderTrackList() {
+            const container = document.getElementById('trackListContainer');
+
+            if (catalog.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📀</div>
+                        <h3 class="empty-title">Your vault is empty</h3>
+                        <p class="empty-text">Add your first track to start organizing your catalog and protecting your royalties.</p>
+                        <button class="btn btn-primary" onclick="openAddTrackModal()">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            Add Your First Track
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="track-list">
+                    ${catalog.map(track => renderTrackItem(track)).join('')}
+                </div>
+            `;
+        }
+
+        function renderTrackItem(track) {
+            const collabCount = (track.collaborators || []).filter(c => c.name).length;
+            const isComplete = track.isrc && track.releaseDate && collabCount > 0;
+            const initials = track.title.substring(0, 2).toUpperCase();
+
+            return `
+                <div class="track-item" onclick="openViewModal('${track.id}')">
+                    <div class="track-artwork">${initials}</div>
+                    <div class="track-details">
+                        <div class="track-title">${escapeHtml(track.title)}</div>
+                        <div class="track-meta">
+                            <span class="track-meta-item">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                ${escapeHtml(track.artist)}
+                            </span>
+                            ${track.featured ? `<span class="track-meta-item">ft. ${escapeHtml(track.featured)}</span>` : ''}
+                            <span class="track-meta-item">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                                ${collabCount} credit${collabCount !== 1 ? 's' : ''}
+                            </span>
+                            ${track.releaseDate ? `
+                                <span class="track-meta-item">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    ${formatDate(track.releaseDate)}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="track-status">
+                        <span class="status-badge ${isComplete ? 'status-complete' : 'status-incomplete'}">
+                            ${isComplete ? '✓ Complete' : '○ Incomplete'}
+                        </span>
+                        <span class="track-arrow">→</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================
+        // ADD/EDIT TRACK MODAL
+        // =========================================
+
+        function openAddTrackModal() {
+            currentTrackId = null;
+            document.getElementById('trackModalTitle').textContent = 'Add New Track';
+            document.getElementById('trackForm').reset();
+            document.getElementById('editTrackId').value = '';
+            
+            collaborators = [{ name: '', role: 'Writer', split: 100 }];
+            renderCollaborators();
+            
+            document.getElementById('trackModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openEditTrackModal(track) {
+            currentTrackId = track.id;
+            document.getElementById('trackModalTitle').textContent = 'Edit Track';
+            document.getElementById('editTrackId').value = track.id;
+
+            document.getElementById('inputTitle').value = track.title || '';
+            document.getElementById('inputArtist').value = track.artist || '';
+            document.getElementById('inputFeatured').value = track.featured || '';
+            document.getElementById('inputISRC').value = track.isrc || '';
+            document.getElementById('inputReleaseDate').value = track.releaseDate || '';
+            document.getElementById('inputBPM').value = track.bpm || '';
+            document.getElementById('inputKey').value = track.key || '';
+            document.getElementById('inputGenre').value = track.genre || '';
+            document.getElementById('inputPublisher').value = track.publisher || '';
+            document.getElementById('inputPRO').value = track.pro || '';
+            document.getElementById('inputSamples').value = track.samples || '';
+            document.getElementById('inputNotes').value = track.notes || '';
+
+            collaborators = (track.collaborators && track.collaborators.length > 0)
+                ? JSON.parse(JSON.stringify(track.collaborators))
+                : [{ name: '', role: 'Writer', split: 100 }];
+            
+            renderCollaborators();
+
+            document.getElementById('trackModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTrackModal() {
+            document.getElementById('trackModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function saveTrack() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const artist = document.getElementById('inputArtist').value.trim();
+
+            if (!title || !artist) {
+                showToast('Title and Artist are required', 'error');
+                return;
+            }
+
+            const trackData = {
+                id: currentTrackId || generateId(),
+                title: title,
+                artist: artist,
+                featured: document.getElementById('inputFeatured').value.trim(),
+                isrc: document.getElementById('inputISRC').value.trim(),
+                releaseDate: document.getElementById('inputReleaseDate').value,
+                bpm: document.getElementById('inputBPM').value,
+                key: document.getElementById('inputKey').value.trim(),
+                genre: document.getElementById('inputGenre').value.trim(),
+                publisher: document.getElementById('inputPublisher').value.trim(),
+                pro: document.getElementById('inputPRO').value,
+                samples: document.getElementById('inputSamples').value.trim(),
+                notes: document.getElementById('inputNotes').value.trim(),
+                collaborators: collaborators.filter(c => c.name.trim() !== ''),
+                updatedAt: new Date().toISOString()
+            };
+
+            if (currentTrackId) {
+                const idx = catalog.findIndex(t => t.id === currentTrackId);
+                if (idx !== -1) {
+                    trackData.createdAt = catalog[idx].createdAt;
+                    catalog[idx] = trackData;
+                }
+            } else {
+                trackData.createdAt = new Date().toISOString();
+                catalog.unshift(trackData);
+            }
+
+            saveCatalog();
+            renderTrackList();
+            closeTrackModal();
+            showToast('Track saved!', 'success');
+        }
+
+        // =========================================
+        // COLLABORATORS
+        // =========================================
+
+        function renderCollaborators() {
+            const container = document.getElementById('collabList');
+            document.getElementById('collabCount').textContent = collaborators.filter(c => c.name).length;
+
+            container.innerHTML = collaborators.map((collab, idx) => `
+                <div class="collab-item">
+                    <input type="text" class="collab-input" placeholder="Name" 
+                           value="${escapeHtml(collab.name)}" 
+                           onchange="updateCollab(${idx}, 'name', this.value)">
+                    <select class="collab-input" onchange="updateCollab(${idx}, 'role', this.value)">
+                        <option value="Writer" ${collab.role === 'Writer' ? 'selected' : ''}>Writer</option>
+                        <option value="Producer" ${collab.role === 'Producer' ? 'selected' : ''}>Producer</option>
+                        <option value="Writer/Producer" ${collab.role === 'Writer/Producer' ? 'selected' : ''}>Writer/Producer</option>
+                        <option value="Composer" ${collab.role === 'Composer' ? 'selected' : ''}>Composer</option>
+                        <option value="Featured" ${collab.role === 'Featured' ? 'selected' : ''}>Featured</option>
+                        <option value="Engineer" ${collab.role === 'Engineer' ? 'selected' : ''}>Engineer</option>
+                    </select>
+                    <input type="number" class="collab-input split-input" placeholder="%" 
+                           min="0" max="100" value="${collab.split}" 
+                           onchange="updateCollab(${idx}, 'split', this.value)">
+                    <button type="button" class="remove-btn" onclick="removeCollab(${idx})">×</button>
+                </div>
+            `).join('');
+
+            updateSplitTotal();
+        }
+
+        function addCollaborator() {
+            collaborators.push({ name: '', role: 'Writer', split: 0 });
+            renderCollaborators();
+        }
+
+        function removeCollab(idx) {
+            if (collaborators.length > 1) {
+                collaborators.splice(idx, 1);
+                renderCollaborators();
+            }
+        }
+
+        function updateCollab(idx, field, value) {
+            if (field === 'split') {
+                collaborators[idx][field] = parseFloat(value) || 0;
+            } else {
+                collaborators[idx][field] = value;
+            }
+            if (field === 'name') {
+                document.getElementById('collabCount').textContent = collaborators.filter(c => c.name).length;
+            }
+            if (field === 'split') {
+                updateSplitTotal();
+            }
+        }
+
+        function updateSplitTotal() {
+            const total = collaborators.reduce((sum, c) => sum + (parseFloat(c.split) || 0), 0);
+            const display = document.getElementById('splitTotalDisplay');
+            const summary = document.getElementById('splitSummary');
+
+            display.textContent = total + '%';
+            summary.classList.remove('valid', 'invalid');
+
+            if (total === 100) {
+                summary.classList.add('valid');
+            } else if (total > 0) {
+                summary.classList.add('invalid');
+            }
+        }
+
+        // =========================================
+        // VIEW TRACK MODAL
+        // =========================================
+
+        function openViewModal(trackId) {
+            currentTrackId = trackId;
+            const track = catalog.find(t => t.id === trackId);
+            if (!track) return;
+
+            document.getElementById('viewModalTitle').textContent = track.title;
+            
+            // Reset to details tab
+            document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.view-tab').classList.add('active');
+            
+            renderViewDetails(track);
+
+            document.getElementById('viewModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function switchViewTab(tab, btn) {
+            document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+
+            const track = catalog.find(t => t.id === currentTrackId);
+            if (!track) return;
+
+            if (tab === 'details') {
+                renderViewDetails(track);
+            } else if (tab === 'splitsheet') {
+                renderSplitSheet(track);
+            }
+        }
+
+        function renderViewDetails(track) {
+            const content = document.getElementById('viewContent');
+            const collabs = track.collaborators || [];
+
+            content.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">Basic Info</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-item-label">Artist</div>
+                            <div class="detail-item-value">${escapeHtml(track.artist)}</div>
+                        </div>
+                        ${track.featured ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">Featured</div>
+                                <div class="detail-item-value">${escapeHtml(track.featured)}</div>
+                            </div>
+                        ` : ''}
+                        ${track.isrc ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">ISRC</div>
+                                <div class="detail-item-value mono">${escapeHtml(track.isrc)}</div>
+                            </div>
+                        ` : ''}
+                        ${track.releaseDate ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">Release Date</div>
+                                <div class="detail-item-value">${formatDate(track.releaseDate)}</div>
+                            </div>
+                        ` : ''}
+                        ${track.bpm ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">BPM</div>
+                                <div class="detail-item-value">${track.bpm}</div>
+                            </div>
+                        ` : ''}
+                        ${track.key ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">Key</div>
+                                <div class="detail-item-value">${escapeHtml(track.key)}</div>
+                            </div>
+                        ` : ''}
+                        ${track.genre ? `
+                            <div class="detail-item">
+                                <div class="detail-item-label">Genre</div>
+                                <div class="detail-item-value">${escapeHtml(track.genre)}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${collabs.length > 0 && collabs[0].name ? `
+                    <div class="detail-section">
+                        <div class="detail-label">Credits & Splits</div>
+                        ${collabs.filter(c => c.name).map(c => `
+                            <div class="credit-row">
+                                <div class="credit-info">
+                                    <div class="credit-avatar">${c.name.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <div class="credit-name">${escapeHtml(c.name)}</div>
+                                        <div class="credit-role">${c.role}</div>
+                                    </div>
+                                </div>
+                                <div class="credit-split">${c.split}%</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${track.publisher || track.pro ? `
+                    <div class="detail-section">
+                        <div class="detail-label">Publishing</div>
+                        <div class="detail-grid">
+                            ${track.publisher ? `
+                                <div class="detail-item">
+                                    <div class="detail-item-label">Publisher</div>
+                                    <div class="detail-item-value">${escapeHtml(track.publisher)}</div>
+                                </div>
+                            ` : ''}
+                            ${track.pro ? `
+                                <div class="detail-item">
+                                    <div class="detail-item-label">PRO</div>
+                                    <div class="detail-item-value">${track.pro}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${track.samples ? `
+                    <div class="detail-section">
+                        <div class="detail-label">Samples</div>
+                        <div class="detail-item" style="grid-column: span 2;">
+                            <div class="detail-item-value" style="white-space: pre-wrap; font-weight: 400; color: var(--text-secondary);">${escapeHtml(track.samples)}</div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${track.notes ? `
+                    <div class="detail-section">
+                        <div class="detail-label">Notes</div>
+                        <div class="detail-item" style="grid-column: span 2;">
+                            <div class="detail-item-value" style="white-space: pre-wrap; font-weight: 400; color: var(--text-secondary);">${escapeHtml(track.notes)}</div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function renderSplitSheet(track) {
+            const content = document.getElementById('viewContent');
+            const collabs = (track.collaborators || []).filter(c => c.name);
+            const totalSplit = collabs.reduce((sum, c) => sum + (c.split || 0), 0);
+
+            content.innerHTML = `
+                <div style="background: #fff; color: #000; border-radius: var(--radius-lg); padding: 40px; font-family: 'Inter', sans-serif;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #000;">
+                        <div>
+                            <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 4px;">${escapeHtml(track.title)}</h2>
+                            <p style="color: #666;">${escapeHtml(track.artist)}${track.featured ? ' ft. ' + escapeHtml(track.featured) : ''}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; font-size: 0.9rem; letter-spacing: 0.05em;">RAPPERSTORE</div>
+                            <div style="font-size: 0.75rem; color: #999;">VAULT</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <div>
+                            <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">ISRC</div>
+                            <div style="font-weight: 600;">${track.isrc || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Release Date</div>
+                            <div style="font-weight: 600;">${track.releaseDate ? formatDate(track.releaseDate) : 'TBD'}</div>
+                        </div>
+                        ${track.publisher ? `
+                            <div>
+                                <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Publisher</div>
+                                <div style="font-weight: 600;">${escapeHtml(track.publisher)}</div>
+                            </div>
+                        ` : ''}
+                        ${track.pro ? `
+                            <div>
+                                <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">PRO</div>
+                                <div style="font-weight: 600;">${track.pro}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Ownership & Splits</div>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 2px solid #000;">
+                                <th style="text-align: left; padding: 10px 0; font-weight: 700;">Name</th>
+                                <th style="text-align: left; padding: 10px 0; font-weight: 700;">Role</th>
+                                <th style="text-align: right; padding: 10px 0; font-weight: 700;">Share</th>
+                            </tr>
+                            ${collabs.length > 0 ? collabs.map(c => `
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 12px 0;">${escapeHtml(c.name)}</td>
+                                    <td style="padding: 12px 0; color: #666;">${c.role}</td>
+                                    <td style="padding: 12px 0; text-align: right; font-weight: 600;">${c.split}%</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="3" style="padding: 12px 0; color: #999;">No collaborators listed</td></tr>'}
+                            <tr style="border-top: 2px solid #000;">
+                                <td colspan="2" style="padding: 12px 0; font-weight: 700;">Total</td>
+                                <td style="padding: 12px 0; text-align: right; font-weight: 700;">${totalSplit}%</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    ${track.samples ? `
+                        <div style="margin-bottom: 30px;">
+                            <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Sample Declaration</div>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: #333;">${escapeHtml(track.samples)}</p>
+                        </div>
+                    ` : ''}
+
+                    ${collabs.length > 0 ? `
+                        <div style="margin-top: 40px;">
+                            <div style="font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Signatures</div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                                ${collabs.slice(0, 4).map(c => `
+                                    <div style="border-bottom: 1px solid #000; padding-bottom: 50px;">
+                                        <div style="font-size: 0.8rem; color: #666;">${escapeHtml(c.name)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 0.75rem; color: #999;">
+                        Generated by RapperStore VAULT • ${new Date().toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        function editTrack() {
+            const track = catalog.find(t => t.id === currentTrackId);
+            if (!track) return;
+            closeViewModal();
+            setTimeout(() => openEditTrackModal(track), 300);
+        }
+
+        function deleteTrack() {
+            if (!confirm('Delete this track? This cannot be undone.')) return;
+            catalog = catalog.filter(t => t.id !== currentTrackId);
+            saveCatalog();
+            renderTrackList();
+            closeViewModal();
+            showToast('Track deleted', 'success');
+        }
+
+        // =========================================
+        // PDF EXPORT
+        // =========================================
+
+        function exportTrackPDF() {
+            const track = catalog.find(t => t.id === currentTrackId);
+            if (!track) return;
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const collabs = (track.collaborators || []).filter(c => c.name);
+            let y = 25;
+
+            // Header
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text('RAPPERSTORE VAULT', pageWidth - 20, 15, { align: 'right' });
+
+            // Title
+            doc.setFontSize(26);
+            doc.setTextColor(0);
+            doc.setFont(undefined, 'bold');
+            doc.text(track.title, 20, y + 10);
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100);
+            doc.text(track.artist + (track.featured ? ' ft. ' + track.featured : ''), 20, y + 20);
+
+            y = 60;
+
+            // Info section
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('SONG INFORMATION', 20, y);
+            y += 10;
+
+            doc.setTextColor(0);
+            doc.setFontSize(11);
+            
+            if (track.isrc) { doc.text('ISRC: ' + track.isrc, 20, y); y += 7; }
+            if (track.releaseDate) { doc.text('Release: ' + formatDate(track.releaseDate), 20, y); y += 7; }
+            if (track.bpm) { doc.text('BPM: ' + track.bpm, 20, y); y += 7; }
+            if (track.key) { doc.text('Key: ' + track.key, 20, y); y += 7; }
+            if (track.genre) { doc.text('Genre: ' + track.genre, 20, y); y += 7; }
+            if (track.publisher) { doc.text('Publisher: ' + track.publisher, 20, y); y += 7; }
+            if (track.pro) { doc.text('PRO: ' + track.pro, 20, y); y += 7; }
+
+            y += 10;
+
+            // Credits
+            if (collabs.length > 0) {
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text('OWNERSHIP & SPLITS', 20, y);
+                y += 10;
+
+                doc.setTextColor(0);
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('Name', 20, y);
+                doc.text('Role', 90, y);
+                doc.text('Split', 160, y);
+                y += 8;
+
+                doc.setFont(undefined, 'normal');
+                collabs.forEach(c => {
+                    doc.text(c.name, 20, y);
+                    doc.text(c.role, 90, y);
+                    doc.text(c.split + '%', 160, y);
+                    y += 7;
+                });
+
+                const total = collabs.reduce((sum, c) => sum + c.split, 0);
+                y += 3;
+                doc.setFont(undefined, 'bold');
+                doc.text('Total', 90, y);
+                doc.text(total + '%', 160, y);
+            }
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.setFont(undefined, 'normal');
+            doc.text('Generated by RapperStore VAULT • ' + new Date().toLocaleDateString(), pageWidth / 2, 285, { align: 'center' });
+
+            doc.save(track.title.replace(/[^a-z0-9]/gi, '_') + '_split_sheet.pdf');
+            showToast('PDF exported!', 'success');
+        }
+
+        // =========================================
+        // EPK GENERATOR (WITH PHOTO)
+        // =========================================
+
+        function updateEPKTrackSelector() {
+            const container = document.getElementById('epkTrackSelect');
+            if (catalog.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-tertiary); font-size: 0.9rem;">Add tracks to your catalog first</p>';
+                return;
+            }
+
+            container.innerHTML = catalog.slice(0, 5).map(track => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-glass-light); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); margin-bottom: 8px;">
+                    <input type="checkbox" id="epkTrack_${track.id}" style="width: 18px; height: 18px;">
+                    <label for="epkTrack_${track.id}" style="flex: 1; cursor: pointer;">
+                        <strong>${escapeHtml(track.title)}</strong>
+                        <span style="color: var(--text-tertiary);"> — ${escapeHtml(track.artist)}</span>
+                    </label>
+                </div>
+            `).join('');
+        }
+
+        function generateEPK() {
+            const artistName = document.getElementById('epkArtistName').value.trim();
+            const bio = document.getElementById('epkBio').value.trim();
+
+            if (!artistName || !bio) {
+                showToast('Artist name and bio are required', 'error');
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let y = 20;
+
+            // If we have a photo, add it at the top
+            if (epkPhotoData) {
+                try {
+                    // Add photo - centered, with max dimensions
+                    const imgProps = doc.getImageProperties(epkPhotoData);
+                    const maxWidth = 60;
+                    const maxHeight = 60;
+                    
+                    let imgWidth = imgProps.width;
+                    let imgHeight = imgProps.height;
+                    
+                    // Scale proportionally
+                    if (imgWidth > maxWidth) {
+                        const ratio = maxWidth / imgWidth;
+                        imgWidth = maxWidth;
+                        imgHeight = imgHeight * ratio;
+                    }
+                    if (imgHeight > maxHeight) {
+                        const ratio = maxHeight / imgHeight;
+                        imgHeight = maxHeight;
+                        imgWidth = imgWidth * ratio;
+                    }
+                    
+                    const imgX = (pageWidth - imgWidth) / 2;
+                    doc.addImage(epkPhotoData, 'JPEG', imgX, y, imgWidth, imgHeight);
+                    y += imgHeight + 15;
+                } catch (e) {
+                    console.warn('Could not add image to PDF:', e);
+                }
+            }
+
+            // Artist Name (large, centered)
+            doc.setFontSize(28);
+            doc.setTextColor(0);
+            doc.setFont(undefined, 'bold');
+            doc.text(artistName.toUpperCase(), pageWidth / 2, y, { align: 'center' });
+            y += 10;
+
+            // Subtitle (genre • location)
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100);
+            const subtitle = [
+                document.getElementById('epkGenre').value,
+                document.getElementById('epkLocation').value
+            ].filter(Boolean).join(' • ');
+            if (subtitle) {
+                doc.text(subtitle, pageWidth / 2, y, { align: 'center' });
+                y += 8;
+            }
+
+            // Years active
+            const yearsActive = document.getElementById('epkYearsActive').value.trim();
+            if (yearsActive) {
+                doc.setFontSize(10);
+                doc.setTextColor(130);
+                doc.text(yearsActive, pageWidth / 2, y, { align: 'center' });
+                y += 8;
+            }
+
+            y += 10;
+
+            // Divider line
+            doc.setDrawColor(200);
+            doc.line(20, y, pageWidth - 20, y);
+            y += 15;
+
+            // Bio
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('BIO', 20, y);
+            y += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60);
+            const bioLines = doc.splitTextToSize(bio, pageWidth - 40);
+            doc.text(bioLines, 20, y);
+            y += bioLines.length * 5 + 12;
+
+            // Achievements
+            const achievements = document.getElementById('epkAchievements').value.trim();
+            if (achievements) {
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text('HIGHLIGHTS', 20, y);
+                y += 8;
+
+                doc.setFontSize(10);
+                doc.setTextColor(60);
+                const achLines = doc.splitTextToSize(achievements, pageWidth - 40);
+                doc.text(achLines, 20, y);
+                y += achLines.length * 5 + 12;
+            }
+
+            // Check if we need a new page
+            if (y > pageHeight - 80) {
+                doc.addPage();
+                y = 20;
+            }
+
+            // Contact section
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('CONTACT', 20, y);
+            y += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60);
+            const email = document.getElementById('epkEmail').value;
+            const phone = document.getElementById('epkPhone').value;
+            const website = document.getElementById('epkWebsite').value;
+            
+            if (email) { doc.text('Email: ' + email, 20, y); y += 6; }
+            if (phone) { doc.text('Phone: ' + phone, 20, y); y += 6; }
+            if (website) { doc.text('Web: ' + website, 20, y); y += 6; }
+
+            y += 8;
+
+            // Socials
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text('LINKS', 20, y);
+            y += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60);
+            const instagram = document.getElementById('epkInstagram').value;
+            const spotify = document.getElementById('epkSpotify').value;
+            const apple = document.getElementById('epkApple').value;
+            const youtube = document.getElementById('epkYouTube').value;
+
+            if (instagram) { doc.text('Instagram: ' + instagram, 20, y); y += 6; }
+            if (spotify) { doc.text('Spotify: ' + spotify, 20, y); y += 6; }
+            if (apple) { doc.text('Apple Music: ' + apple, 20, y); y += 6; }
+            if (youtube) { doc.text('YouTube: ' + youtube, 20, y); y += 6; }
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(180);
+            doc.text('Generated by RapperStore VAULT', pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+            doc.save(artistName.replace(/[^a-z0-9]/gi, '_') + '_EPK.pdf');
+            showToast('EPK generated!', 'success');
+        }
+
+        // =========================================
+        // IMPORT / EXPORT
+        // =========================================
+
+        function exportCatalogJSON() {
+            if (catalog.length === 0) {
+                showToast('No tracks to export', 'error');
+                return;
+            }
+
+            const data = JSON.stringify(catalog, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'rapperstore_vault_' + new Date().toISOString().split('T')[0] + '.json';
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('Catalog exported!', 'success');
+        }
+
+        function importCatalogJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) throw new Error('Invalid format');
+
+                    const existingIds = new Set(catalog.map(t => t.id));
+                    let added = 0;
+
+                    imported.forEach(track => {
+                        if (!existingIds.has(track.id)) {
+                            catalog.push(track);
+                            added++;
+                        }
+                    });
+
+                    saveCatalog();
+                    renderTrackList();
+                    showToast(`Imported ${added} track${added !== 1 ? 's' : ''}!`, 'success');
+                } catch (err) {
+                    showToast('Invalid file format', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function exportCSV() {
+            if (catalog.length === 0) {
+                showToast('No tracks to export', 'error');
+                return;
+            }
+
+            const headers = ['Title', 'Artist', 'Featured', 'ISRC', 'Release Date', 'BPM', 'Key', 'Genre', 'Publisher', 'PRO', 'Collaborators', 'Splits'];
+            const rows = catalog.map(t => {
+                const collabs = (t.collaborators || []).filter(c => c.name);
+                return [
+                    t.title,
+                    t.artist,
+                    t.featured || '',
+                    t.isrc || '',
+                    t.releaseDate || '',
+                    t.bpm || '',
+                    t.key || '',
+                    t.genre || '',
+                    t.publisher || '',
+                    t.pro || '',
+                    collabs.map(c => c.name).join('; '),
+                    collabs.map(c => c.name + ':' + c.split + '%').join('; ')
+                ].map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'rapperstore_catalog.csv';
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV exported!', 'success');
+        }
+
+        // =========================================
+        // TOOLS - SPLIT CALCULATOR
+        // =========================================
+
+        function initSplitCalculator() {
+            renderCalcInputs();
+        }
+
+        function renderCalcInputs() {
+            const container = document.getElementById('calcSplitInputs');
+            container.innerHTML = calcPeople.map((p, i) => `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" class="form-input" placeholder="Name" value="${escapeHtml(p.name)}" 
+                           onchange="updateCalcPerson(${i}, 'name', this.value)" style="flex: 1;">
+                    <input type="number" class="form-input" placeholder="%" value="${p.split}" min="0" max="100"
+                           onchange="updateCalcPerson(${i}, 'split', this.value)" style="width: 80px; text-align: center;">
+                    ${calcPeople.length > 2 ? `
+                        <button class="btn btn-icon btn-danger" onclick="removeCalcPerson(${i})">×</button>
+                    ` : ''}
+                </div>
+            `).join('');
+
+            calculateSplits();
+        }
+
+        function addCalcPerson() {
+            calcPeople.push({ name: '', split: 0 });
+            renderCalcInputs();
+        }
+
+        function removeCalcPerson(idx) {
+            if (calcPeople.length > 2) {
+                calcPeople.splice(idx, 1);
+                renderCalcInputs();
+            }
+        }
+
+        function updateCalcPerson(idx, field, value) {
+            if (field === 'split') {
+                calcPeople[idx][field] = parseFloat(value) || 0;
+            } else {
+                calcPeople[idx][field] = value;
+            }
+            calculateSplits();
+        }
+
+        function calculateSplits() {
+            const earnings = parseFloat(document.getElementById('calcEarnings').value) || 0;
+            const results = document.getElementById('calcResults');
+            const totalSplit = calcPeople.reduce((sum, p) => sum + p.split, 0);
+
+            if (totalSplit === 0 || earnings === 0) {
+                results.style.display = 'none';
+                return;
+            }
+
+            results.style.display = 'block';
+            results.innerHTML = `
+                <div style="background: var(--bg-glass-light); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 20px;">
+                    <div style="font-size: 0.75rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">Payout Breakdown</div>
+                    ${calcPeople.filter(p => p.split > 0).map(p => {
+                        const payout = (earnings * (p.split / 100)).toFixed(2);
+                        return `
+                            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
+                                <span>${p.name || 'Person'} (${p.split}%)</span>
+                                <span style="font-weight: 700; color: var(--accent-green);">$${payout}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                    <div style="display: flex; justify-content: space-between; padding-top: 12px; margin-top: 8px; font-weight: 700;">
+                        <span>Total (${totalSplit}%)</span>
+                        <span>$${(earnings * (totalSplit / 100)).toFixed(2)}</span>
+                    </div>
+                    ${totalSplit !== 100 ? `
+                        <div style="margin-top: 12px; padding: 10px; background: rgba(255, 159, 10, 0.1); border-radius: var(--radius-sm); color: var(--accent-orange); font-size: 0.85rem;">
+                            ⚠️ Splits total ${totalSplit}% (should be 100%)
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Re-calculate when earnings change
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('calcEarnings').addEventListener('input', calculateSplits);
+        });
+
+        // =========================================
+        // UTILITIES
+        // =========================================
+
+        function generateId() {
+            return 'trk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML = `
+                <div class="toast-icon">${type === 'success' ? '✓' : '!'}</div>
+                <div class="toast-message">${message}</div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // =========================================
+        // KEYBOARD SHORTCUTS
+        // =========================================
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTrackModal();
+                closeViewModal();
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openAddTrackModal();
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportCatalogJSON();
+            }
+        });
+
+        // Close modals on backdrop click
+        document.getElementById('trackModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) closeTrackModal();
+        });
+
+        document.getElementById('viewModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) closeViewModal();
+        });
+
+        // =========================================
+        // CONSOLE BRANDING
+        // =========================================
+
+        console.log('%c⚫ RAPPERSTORE VAULT', 'font-size: 24px; font-weight: bold; color: #bf5af2;');
+        console.log('%cYour music metadata stays on YOUR device.', 'color: #888;');
+        console.log('%cShortcuts: Ctrl+N (new) • Ctrl+E (export) • Esc (close)', 'color: #666;');
+    </script>
+</body>
+</html>
